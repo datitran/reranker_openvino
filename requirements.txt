@@ -1,0 +1,8 @@
+openvino==2024.4.0
+openvino-dev==2024.4.0
+tokenizers==0.19.1
+transformers==4.44.2
+optimum==1.22.0
+onnx==1.16.2
+onnxruntime==1.16.3
+pandas==2.2.2
