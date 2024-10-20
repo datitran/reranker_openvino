@@ -1,18 +1,25 @@
 import argparse
 import numpy as np
 import pandas as pd
+from typing import Any
 from openvino.runtime import Core
 from transformers import AutoTokenizer
 
 
-def load_openvino_model(model_path):
+def load_openvino_model(model_path: str) -> Core:
     core = Core()
     model = core.read_model(model_path + ".xml")
     compiled_model = core.compile_model(model, "CPU")
     return compiled_model
 
 
-def rerank(compiled_model, query, results, tokenizer, batch_size=16):
+def rerank(
+    compiled_model: Core,
+    query: str,
+    results: list[str],
+    tokenizer: AutoTokenizer,
+    batch_size: int,
+) -> np.ndarray[np.float32, Any]:
     max_length = 512
     all_logits = []
 
@@ -50,7 +57,7 @@ def rerank(compiled_model, query, results, tokenizer, batch_size=16):
     return all_logits
 
 
-def fetch_search_data(ai_search_text):
+def fetch_search_data(search_text: str) -> pd.DataFrame:
     # Usually you would fetch the data from a database
     df = pd.read_csv("cnbc_headlines.csv")
     df = df[~df["Headlines"].isnull()]
@@ -60,7 +67,7 @@ def fetch_search_data(ai_search_text):
     # Load the model and rerank
     openvino_model = load_openvino_model("cross-encoder-openvino-model/model")
     tokenizer = AutoTokenizer.from_pretrained("cross-encoder/ms-marco-TinyBERT-L-2-v2")
-    rerank_scores = rerank(openvino_model, ai_search_text, texts, tokenizer)
+    rerank_scores = rerank(openvino_model, search_text, texts, tokenizer, batch_size=16)
 
     # Add the rerank scores to the DataFrame and sort by the new scores
     df["rerank_score"] = rerank_scores
